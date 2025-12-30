@@ -16,6 +16,17 @@ body,
   background: var(--bg-bone);
   color: var(--fg-blueprint);
   font-family: 'Outfit', sans-serif;
+  /* Performance optimizations */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Allow scrolling when transitioning to Spotify */
+body.allow-scroll {
+  overflow-y: auto;
+  height: 200vh;
+  /* Make body tall enough to scroll */
 }
 
 .canvas-container {
@@ -51,6 +62,26 @@ body,
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: visible;
   padding: 10px;
+  opacity: 1;
+}
+
+/* Fade in images when home scene appears after reverse transition */
+.scene-home.fade-in .blueprint-square {
+  opacity: 0;
+  animation: fadeInCard 0.8s ease-in forwards;
+  animation-delay: calc(var(--card-index, 0) * 0.05s);
+}
+
+@keyframes fadeInCard {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) translateY(0);
+  }
 }
 
 .blueprint-square:hover {
@@ -129,16 +160,38 @@ body,
   top: 0;
   left: 0;
   will-change: transform, opacity, filter;
+  /* GPU acceleration */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  contain: layout style paint;
 }
 
 .scene-home {
   z-index: 1;
+  opacity: 1;
+  transition: opacity 0.8s ease-in;
 }
 
 .scene-home.transitioning {
   transform: scale(1.05) translateY(-140px);
   opacity: 0;
   pointer-events: none;
+}
+
+/* Fade in home scene when coming back from Spotify */
+.scene-home.fade-in {
+  opacity: 0;
+  animation: fadeInHome 0.8s ease-in forwards;
+}
+
+@keyframes fadeInHome {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .scene-detail {
@@ -165,6 +218,147 @@ body,
   filter: blur(10px) !important;
 }
 
+.scene-spotify {
+  z-index: 10001;
+  /* Above black overlay */
+  width: 100%;
+  height: 100vh;
+  background: #000;
+  opacity: 0;
+  transition: opacity 0.8s ease-in;
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+.scene-spotify.active {
+  opacity: 1 !important;
+}
+
+.scene-spotify.active,
+.scene-spotify:not(.transitioning-in) {
+  opacity: 1 !important;
+}
+
+.scene-spotify.transitioning-in {
+  opacity: 0;
+}
+
+.spotify-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.spotify-back-btn {
+  position: absolute;
+  top: 2rem;
+  left: 2rem;
+  z-index: 10001;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  padding: 0.6rem 1.2rem;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.spotify-back-btn:hover {
+  border-color: rgba(255, 255, 255, 0.6);
+  background: rgba(0, 0, 0, 0.9);
+}
+
+.spotify-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #000;
+}
+
+/* Leaf falling animation for headphones */
+.transition-clone.headphones-falling {
+  will-change: transform, opacity;
+}
+
+/* Black overlay for smooth transition */
+.black-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  min-height: 100%;
+  background: #000;
+  z-index: 9998;
+  /* Below Spotify scene (10001) */
+  opacity: 0;
+  animation: fadeToBlack 1.8s ease-out forwards;
+  pointer-events: none;
+  will-change: opacity;
+  /* GPU acceleration */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  contain: strict;
+}
+
+.black-overlay.forward {
+  animation: fadeToBlack 1.8s ease-out forwards;
+}
+
+.black-overlay.reverse {
+  animation: fadeToBlack 1.8s ease-out forwards;
+}
+
+@keyframes fadeToBlack {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* Fade out black overlay when Spotify scene is active or when transitioning back */
+.app-container:has(.scene-spotify.active) .black-overlay.forward,
+.app-container:has(.scene-home:not(.transitioning)) .black-overlay.forward {
+  animation: fadeOutBlack 0.6s ease-out forwards;
+}
+
+.app-container:has(.scene-home:not(.transitioning)) .black-overlay.reverse {
+  animation: fadeToBone 1.2s ease-out forwards;
+}
+
+@keyframes fadeOutBlack {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+@keyframes fadeToBone {
+  from {
+    opacity: 1;
+    background: #000;
+  }
+
+  to {
+    opacity: 0;
+    background: var(--bg-bone);
+    visibility: hidden;
+  }
+}
 
 /* Polaroids */
 /* Polaroids */
@@ -357,8 +551,13 @@ body,
   align-items: center;
   justify-content: center;
   padding: 0;
-  will-change: transform, width, height, opacity;
+  will-change: transform, opacity;
   box-sizing: border-box;
+  /* GPU acceleration optimizations */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+  contain: layout style paint;
 }
 
 .transition-clone .clone-image-wrapper {
@@ -369,12 +568,21 @@ body,
   justify-content: center;
   background: transparent;
   margin-bottom: 15px;
+  /* GPU acceleration */
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 .transition-clone img {
   max-width: 90%;
   max-height: 90%;
   object-fit: contain;
+  /* Image rendering optimizations */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  transform: translateZ(0);
+  will-change: transform, filter;
+  backface-visibility: hidden;
 }
 
 .transition-clone .blueprint-label {
