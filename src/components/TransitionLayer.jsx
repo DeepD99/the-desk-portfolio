@@ -54,19 +54,29 @@ const TransitionLayer = forwardRef(({ onTransitionComplete }, ref) => {
         if (clone) {
             const timer = requestAnimationFrame(() => {
                 const cloneEl = containerRef.current?.querySelector('.transition-clone');
+                const imgEl = cloneEl?.querySelector('img');
+
                 if (cloneEl) {
                     if (clone.id === 'obj_headphones' && clone.direction === 'forward') {
                         // Fullscreen zoom for headphones
                         cloneEl.style.width = '120vw'; // Oversized to ensure full coverage
                         cloneEl.style.height = '120vh';
                         cloneEl.style.transform = `translate(-10vw, -10vh)`; // Center it roughly
-                        cloneEl.style.filter = 'brightness(0)'; // Fade to black
+
+                        if (imgEl) {
+                            imgEl.style.transition = `filter ${DURATION}ms ${EASING}`;
+                            imgEl.style.filter = 'brightness(0)';
+                        }
                     } else {
                         // Normal behavior
                         cloneEl.style.width = `${clone.last.width}px`;
                         cloneEl.style.height = `${clone.last.height}px`;
                         cloneEl.style.transform = `translate(${clone.last.left}px, ${clone.last.top}px) rotate(0deg)`;
-                        cloneEl.style.filter = 'brightness(1)';
+
+                        if (imgEl) {
+                            imgEl.style.transition = `filter ${DURATION}ms ${EASING}`;
+                            imgEl.style.filter = 'brightness(1)';
+                        }
                     }
                 }
             });
@@ -83,8 +93,7 @@ const TransitionLayer = forwardRef(({ onTransitionComplete }, ref) => {
         width: clone.first.width,
         height: clone.first.height,
         transform: `translate(${clone.first.left}px, ${clone.first.top}px)`,
-        transition: `transform ${DURATION}ms ${EASING}, width ${DURATION}ms ${EASING}, height ${DURATION}ms ${EASING}, opacity ${DURATION}ms ${EASING}, filter ${DURATION}ms ${EASING}`,
-        filter: 'brightness(1)', // Start normal
+        transition: `transform ${DURATION}ms ${EASING}, width ${DURATION}ms ${EASING}, height ${DURATION}ms ${EASING}, opacity ${DURATION}ms ${EASING}`,
         zIndex: isHeadphones ? 10000 : 9999
     };
 
