@@ -1,0 +1,417 @@
+:root {
+  --bg-bone: #f5f2e9;
+  --fg-blueprint: #4a4a4a;
+  --fg-muted: #8c8c8c;
+  --accent: #2c2c2c;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: var(--bg-bone);
+  color: var(--fg-blueprint);
+  font-family: 'Outfit', sans-serif;
+}
+
+.canvas-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.desk-blueprint {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: var(--bg-bone);
+}
+
+.blueprint-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.blueprint-square {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: visible;
+  padding: 10px;
+}
+
+.blueprint-square:hover {
+  transform: translate(-50%, -52%) scale(1.02);
+}
+
+.image-stack {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.blueprint-image {
+  position: absolute;
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: contain;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.image-open {
+  z-index: 1;
+  transform: rotate(-8deg);
+  opacity: 0.8;
+}
+
+.image-closed {
+  z-index: 2;
+  transform: rotate(7deg);
+}
+
+.blueprint-square:hover .image-open {
+  z-index: 3;
+  transform: rotate(0deg) scale(1.1);
+  opacity: 1;
+}
+
+.blueprint-square:hover .image-closed {
+  z-index: 1;
+  transform: rotate(15deg) translate(20px, -10px);
+  opacity: 0.5;
+}
+
+.blueprint-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-align: center;
+  color: var(--fg-muted);
+  user-select: none;
+  text-transform: uppercase;
+}
+
+.blueprint-square:hover .blueprint-label {
+  color: var(--accent);
+  font-weight: bold;
+}
+
+/* Base Layout & Scenes */
+.app-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background: var(--bg-bone);
+  overflow: hidden;
+}
+
+.scene-root {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  will-change: transform, opacity, filter;
+}
+
+.scene-home {
+  z-index: 1;
+}
+
+.scene-home.transitioning {
+  transform: scale(1.05) translateY(-140px);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.scene-detail {
+  z-index: 2;
+  overflow-y: auto;
+  padding: 4rem 2rem;
+  box-sizing: border-box;
+  background: var(--bg-bone);
+  opacity: 0;
+  transform: scale(0.95);
+  filter: blur(10px);
+  transition: opacity 0.75s cubic-bezier(.2, .8, .2, 1), transform 0.75s cubic-bezier(.2, .8, .2, 1), filter 0.75s cubic-bezier(.2, .8, .2, 1);
+}
+
+.scene-detail.active {
+  opacity: 1;
+  transform: scale(1);
+  filter: blur(0);
+}
+
+.scene-detail.transitioning-out {
+  opacity: 0 !important;
+  transform: scale(0.95) !important;
+  filter: blur(10px) !important;
+}
+
+
+/* Polaroids */
+/* Polaroids */
+.polaroid-card {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  user-select: none;
+}
+
+.polaroid-card:hover {
+  transform: translate(-50%, -55%) scale(1.05);
+  box-shadow: none;
+  z-index: 10;
+}
+
+.polaroid-card .image-stack {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1/1;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 12px;
+  background: transparent;
+  overflow: visible;
+}
+
+.polaroid-card .blueprint-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transition: transform 0.4s ease;
+  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.15));
+}
+
+.polaroid-card:hover .image-open {
+  transform: scale(1.1);
+}
+
+.polaroid-card .blueprint-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.polaroid-card:hover .blueprint-label {
+  color: var(--accent);
+}
+
+/* Detail View Layout */
+.detail-container {
+  max-width: 900px;
+  margin: 0 auto;
+  opacity: 1;
+}
+
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.back-btn {
+  background: none;
+  border: 1px solid var(--fg-muted);
+  color: var(--fg-muted);
+  padding: 0.6rem 1.2rem;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.back-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.detail-title {
+  font-size: 3rem;
+  margin: 0;
+  letter-spacing: -0.02em;
+  font-weight: 400;
+}
+
+.hero-placeholder-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin: 2rem 0 4rem 0;
+}
+
+.hero-placeholder {
+  width: 420px;
+  max-width: 70vw;
+  aspect-ratio: 1/1.2;
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px dashed #ccc;
+}
+
+.detail-content {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.description-lead {
+  font-size: 1.4rem;
+  line-height: 1.5;
+  color: var(--fg-blueprint);
+  margin-bottom: 4rem;
+  font-weight: 300;
+}
+
+.section-block {
+  margin-top: 4rem;
+}
+
+.section-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--fg-muted);
+  margin-bottom: 2rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.5rem;
+}
+
+.content-list {
+  list-style: none;
+  padding: 0;
+}
+
+.content-item {
+  padding: 1.5rem 0;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5rem;
+}
+
+.item-index {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin-top: 0.3rem;
+}
+
+.filler-text {
+  margin-top: 6rem;
+  font-size: 0.9rem;
+  color: var(--fg-muted);
+  font-style: italic;
+  border-left: 2px solid #eee;
+  padding-left: 2rem;
+}
+
+/* Transition Utilities */
+.is-transitioning {
+  pointer-events: none;
+  cursor: wait;
+}
+
+
+.transition-clone {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  background: transparent;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  will-change: transform, width, height, opacity;
+  box-sizing: border-box;
+}
+
+.transition-clone .clone-image-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  margin-bottom: 15px;
+}
+
+.transition-clone img {
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: contain;
+}
+
+.transition-clone .blueprint-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+
+  .scene-root,
+  .polaroid-card,
+  .transition-clone {
+    transition: opacity 0.3s ease !important;
+    transform: none !important;
+  }
+}
+
+/* Loading Indicator */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-bone);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 200;
+}
+
+.loading-text {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--fg-muted);
+}
