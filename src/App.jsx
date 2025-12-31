@@ -2,7 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import SceneHome from './components/SceneHome';
 import SceneDetail from './components/SceneDetail';
 import SceneSpotify from './components/SceneSpotify';
-import TransitionLayer from './components/TransitionLayer.temp';
+import TransitionLayer from './components/TransitionLayer';
 import LoadingIndicator from './components/LoadingIndicator';
 import { objectMap } from './content/objectMap';
 import './styles/main.css';
