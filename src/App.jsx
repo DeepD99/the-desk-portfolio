@@ -103,23 +103,24 @@ export default function App() {
         }
       };
 
-      // Wait for animation to complete, then show Spotify scene
-      setTimeout(() => {
-        // Show Spotify scene immediately - it will fade in
+      // Wait for animation to complete (Curtain is closed), then switch to Spotify backend
+      setTimeout(async () => {
+        // Step 1: Switch scene behind the curtain
         setActiveScene('spotify');
-        setIsTransitioning(false);
 
-        // Reset body height and prevent scrolling first
+        // Reset body styles immediately
         document.body.classList.remove('allow-scroll');
         document.body.style.overflow = 'hidden';
         document.body.style.height = originalBodyHeight || '';
         window.scrollTo({ top: 0, behavior: 'instant' });
 
-        // Clear clone and overlay after overlay fades out
-        setTimeout(() => {
-          transitionLayerRef.current.clearClone();
-        }, 800); // Wait for black overlay fade out animation
-      }, 3000); // Increased to allow for black overlay fade
+        // Step 2: Open curtain (Fade from Black to Spotify)
+        await transitionLayerRef.current.startFadeOutBlack();
+
+        // Step 3: All done
+        setIsTransitioning(false);
+        transitionLayerRef.current.clearClone();
+      }, 2800); // 800ms start delay + 2000ms curtain fade duration
 
       return cleanup;
     } else {
@@ -158,32 +159,24 @@ export default function App() {
     setIsTransitioning(true);
 
     if (activeScene === 'spotify') {
-      // Reverse black transition for Spotify scene
+      // START BATON PASS: Curtain closes (2.5s)
+      setIsTransitioning(true);
       setActiveScene('transitioning-back');
 
-      // Start reverse black overlay transition (fades in)
+      // 1. Wait for overlay to fade in completely
       await transitionLayerRef.current.startReverseBlackTransition();
 
-      // After black overlay fully fades in, switch to home scene
-      // The home scene will be visible but the overlay will fade out
+      // 2. BATON PASS: Screen is solid black. Swap the scenes now.
       setActiveScene('home');
-      setIsTransitioning(false);
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      document.body.classList.remove('allow-scroll');
 
-      // Add fade-in class to home scene for animation
-      const homeScene = document.querySelector('.scene-home');
-      if (homeScene) {
-        homeScene.classList.add('fade-in');
-      }
+      // 3. REVEAL: Curtain opens (2.5s)
+      await transitionLayerRef.current.startFadeOut();
 
-      // Fade out black overlay and fade in home scene
-      setTimeout(() => {
-        transitionLayerRef.current.clearClone();
-        if (homeScene) {
-          homeScene.classList.remove('fade-in');
-        }
-        window.scrollTo({ top: 0, behavior: 'instant' });
-        document.body.classList.remove('allow-scroll');
-      }, 1200); // Wait for fade out animation + color shift
+      // 4. CLEANUP: Clear everything
+      transitionLayerRef.current.clearClone();
+      setIsTransitioning(false); // Move to end of entire sequence
     } else {
       // Normal back transition for detail scene
       const placeholder = document.querySelector('[data-hero-placeholder]');
@@ -216,6 +209,7 @@ export default function App() {
     <div className={`app-container ${isTransitioning ? 'is-transitioning' : ''}`} ref={scrollContainerRef}>
       {(activeScene === 'home' || activeScene === 'transitioning-to-detail' || activeScene === 'transitioning-back' || activeScene === 'transitioning-to-spotify') && (
         <SceneHome
+          activeScene={activeScene}
           onCardClick={handleCardClick}
           isTransitioning={isTransitioning || activeScene === 'transitioning-to-detail' || activeScene === 'transitioning-to-spotify'}
         />
@@ -230,11 +224,11 @@ export default function App() {
         />
       )}
 
-      {(activeScene === 'spotify' || activeScene === 'transitioning-to-spotify') && (
+      {(activeScene === 'spotify' || activeScene === 'transitioning-to-spotify' || activeScene === 'transitioning-back') && (
         <SceneSpotify
           onBack={handleBack}
           isTransitioning={isTransitioning}
-          className={`${activeScene === 'spotify' ? 'active' : ''} ${activeScene === 'transitioning-to-spotify' ? 'transitioning-in' : ''}`}
+          className={`${(activeScene === 'spotify' || activeScene === 'transitioning-back') ? 'active' : ''} ${activeScene === 'transitioning-to-spotify' ? 'transitioning-in' : ''}`}
         />
       )}
 

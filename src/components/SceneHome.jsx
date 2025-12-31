@@ -1,13 +1,14 @@
 import React from 'react';
 import { objectMap } from '../content/objectMap';
 
-export default function SceneHome({ onCardClick, isTransitioning }) {
+export default function SceneHome({ onCardClick, isTransitioning, activeScene }) {
+    const isSpotifyTransition = activeScene === 'transitioning-to-spotify';
     return (
-        <div className={`scene-root scene-home ${isTransitioning ? 'transitioning' : ''}`}>
+        <div className={`scene-root scene-home ${isTransitioning ? 'transitioning' : ''} ${isSpotifyTransition ? 'is-headphones-transition' : ''}`}>
             {objectMap.map((obj) => (
                 <div
                     key={obj.id}
-                    className="polaroid-card"
+                    className="blueprint-square"
                     style={obj.style}
                     onClick={(e) => onCardClick(e, obj)}
                     data-card-id={obj.id}

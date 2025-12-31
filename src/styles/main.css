@@ -170,12 +170,23 @@ body.allow-scroll {
   z-index: 1;
   opacity: 1;
   transition: opacity 0.8s ease-in;
+  height: 100vh;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
 .scene-home.transitioning {
   transform: scale(1.05) translateY(-140px);
   opacity: 0;
   pointer-events: none;
+}
+
+.scene-home.transitioning.is-headphones-transition {
+  transform: none !important;
+  opacity: 0.15;
+  /* Keep ghost visible briefly */
 }
 
 /* Fade in home scene when coming back from Spotify */
@@ -245,6 +256,13 @@ body.allow-scroll {
   opacity: 0;
 }
 
+.scene-spotify.transitioning .spotify-back-btn,
+.scene-spotify.transitioning-in .spotify-back-btn {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
 .spotify-container {
   width: 100%;
   height: 100%;
@@ -296,10 +314,9 @@ body.allow-scroll {
   height: 100vh;
   min-height: 100%;
   background: #000;
-  z-index: 9998;
-  /* Below Spotify scene (10001) */
+  z-index: 10002;
+  /* Above Spotify scene (10001) */
   opacity: 0;
-  animation: fadeToBlack 1.8s ease-out forwards;
   pointer-events: none;
   will-change: opacity;
   /* GPU acceleration */
@@ -309,11 +326,21 @@ body.allow-scroll {
 }
 
 .black-overlay.forward {
-  animation: fadeToBlack 1.8s ease-out forwards;
+  animation: fadeToBlack 2.0s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 .black-overlay.reverse {
-  animation: fadeToBlack 1.8s ease-out forwards;
+  animation: fadeToBlack 2.0s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* This class will be added after the baton pass to reveal the home scene */
+.black-overlay.fade-out {
+  animation: fadeToBone 2.0s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* This class will be added to reveal the Spotify scene (stays black but fades out) */
+.black-overlay.fade-out-black {
+  animation: fadeOutBlack 2.0s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 @keyframes fadeToBlack {
@@ -326,34 +353,26 @@ body.allow-scroll {
   }
 }
 
-/* Fade out black overlay when Spotify scene is active or when transitioning back */
-.app-container:has(.scene-spotify.active) .black-overlay.forward,
-.app-container:has(.scene-home:not(.transitioning)) .black-overlay.forward {
-  animation: fadeOutBlack 0.6s ease-out forwards;
-}
-
-.app-container:has(.scene-home:not(.transitioning)) .black-overlay.reverse {
-  animation: fadeToBone 1.2s ease-out forwards;
-}
-
 @keyframes fadeOutBlack {
-  from {
-    opacity: 1;
-  }
-
-  to {
-    opacity: 0;
-    visibility: hidden;
-  }
-}
-
-@keyframes fadeToBone {
   from {
     opacity: 1;
     background: #000;
   }
 
   to {
+    opacity: 0;
+    background: #000;
+    visibility: hidden;
+  }
+}
+
+@keyframes fadeToBone {
+  0% {
+    opacity: 1;
+    background: #000;
+  }
+
+  100% {
     opacity: 0;
     background: var(--bg-bone);
     visibility: hidden;
