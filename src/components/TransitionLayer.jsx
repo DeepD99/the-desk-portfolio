@@ -220,8 +220,8 @@ const TransitionLayer = forwardRef(({ onTransitionComplete }, ref) => {
                                 maxWidth: '100%',
                                 maxHeight: '100%',
                                 objectFit: 'contain',
-                                filter: (isHeadphonesForward || (clone.isImmersive && (immersiveStage === 'centered' || immersiveStage === 'zoomed'))) ? 'brightness(0)' : 'brightness(1)',
-                                transition: (isHeadphonesForward || clone.isImmersive) ? `filter 400ms ease-in, opacity 400ms ease-in` : 'none',
+                                filter: (clone.isImmersive && (immersiveStage === 'centered' || immersiveStage === 'zoomed')) ? 'brightness(0)' : 'brightness(1)',
+                                transition: (clone.isImmersive) ? `filter 400ms ease-in, opacity 400ms ease-in` : 'none',
                                 opacity: 1, // Keep the black image visible to act as the portal shape
                                 visibility: 'visible',
                                 transitionProperty: 'filter, opacity'
