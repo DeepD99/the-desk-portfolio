@@ -10,6 +10,7 @@ const TransitionLayer = forwardRef(({ onTransitionComplete }, ref) => {
     const [showBlackOverlay, setShowBlackOverlay] = useState(false);
     const [overlayMode, setOverlayMode] = useState('forward');
     const [isAnimating, setIsAnimating] = useState(false);
+    const [immersiveStage, setImmersiveStage] = useState('none'); // 'none' | 'centered' | 'zoomed'
     const containerRef = useRef(null);
     const animationTimers = useRef([]);
 
@@ -19,11 +20,12 @@ const TransitionLayer = forwardRef(({ onTransitionComplete }, ref) => {
     };
 
     useImperativeHandle(ref, () => ({
-        startTransition: async ({ cardEl, content, targetRect }) => {
+        startTransition: async ({ cardEl, content, targetRect, isImmersive }) => {
             clearTimers();
             const firstRect = cardEl.getBoundingClientRect();
 
             setIsAnimating(false);
+            setImmersiveStage('none');
             setShowBlackOverlay(false);
             setOverlayMode('forward');
 
@@ -34,6 +36,7 @@ const TransitionLayer = forwardRef(({ onTransitionComplete }, ref) => {
                 label: content.label,
                 id: content.id,
                 direction: 'forward',
+                isImmersive,
                 key: Date.now()
             });
 
@@ -131,6 +134,15 @@ const TransitionLayer = forwardRef(({ onTransitionComplete }, ref) => {
                     animationTimers.current.push(blackoutTimer);
                 }, 400);
                 animationTimers.current.push(fallTimer);
+            } else if (clone.isImmersive && clone.direction === 'forward') {
+                // Stage 1: Move to center
+                setImmersiveStage('centered');
+
+                // Stage 2: Portal Zoom
+                const zoomTimer = setTimeout(() => {
+                    setImmersiveStage('zoomed');
+                }, 600); // Wait for centering to nearly complete
+                animationTimers.current.push(zoomTimer);
             }
         }, 50);
 
@@ -168,6 +180,15 @@ const TransitionLayer = forwardRef(({ onTransitionComplete }, ref) => {
         if (isHeadphonesForward) {
             currentStyle.transition = `transform 400ms ${EASING}, width 400ms ${EASING}, height 400ms ${EASING}`;
             currentStyle.transform = `translate3d(${centerX}px, ${centerY}px, 0) rotate(0deg)`;
+        } else if (clone.isImmersive && clone.direction === 'forward') {
+            if (immersiveStage === 'centered') {
+                currentStyle.transition = `transform 600ms ${EASING}`;
+                currentStyle.transform = `translate3d(${centerX}px, ${centerY}px, 0) rotate(0deg)`;
+            } else if (immersiveStage === 'zoomed') {
+                currentStyle.transition = `transform 1000ms cubic-bezier(.4, 0, .2, 1), opacity 800ms ease-in 200ms`;
+                currentStyle.transform = `translate3d(${centerX}px, ${centerY}px, 0) scale(12)`;
+                currentStyle.opacity = 0;
+            }
         } else {
             currentStyle.transition = `transform ${DURATION}ms ${EASING}, width ${DURATION}ms ${EASING}, height ${DURATION}ms ${EASING}, opacity ${DURATION}ms ${EASING}`;
             currentStyle.width = `${clone.last.width}px`;

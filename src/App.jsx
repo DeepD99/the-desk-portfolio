@@ -47,11 +47,12 @@ export default function App() {
   const handleCardClick = useCallback(async (e, obj) => {
     if (isTransitioning) return;
 
-    setIsTransitioning(true);
-    setActiveKey(obj.contentKey);
-
     const cardEl = e.currentTarget;
     const isHeadphones = obj.id === 'obj_headphones';
+    const isLaptop = obj.id === 'obj_laptop';
+
+    setIsTransitioning(true);
+    setActiveKey(obj.contentKey);
 
     if (isHeadphones) {
       // Special transition for headphones
@@ -123,6 +124,30 @@ export default function App() {
       }, 2800); // 800ms start delay + 2000ms curtain fade duration
 
       return cleanup;
+    } else if (isLaptop) {
+      // Stay on home scene while zooming
+      setTimeout(async () => {
+        const targetRect = {
+          left: 0,
+          top: 0,
+          width: window.innerWidth,
+          height: window.innerHeight
+        };
+
+        await transitionLayerRef.current.startTransition({
+          cardEl,
+          content: obj,
+          targetRect,
+          isImmersive: true
+        });
+
+        // Wait for animation duration (Stage 1: 600ms + Stage 2: 1000ms)
+        setTimeout(() => {
+          setIsTransitioning(false);
+          setActiveScene('detail');
+          transitionLayerRef.current.clearClone();
+        }, 1800); // 1.8s to cover both stages and a small buffer
+      }, 50);
     } else {
       // Normal transition for other items
       setActiveScene('transitioning-to-detail');
@@ -178,21 +203,25 @@ export default function App() {
       transitionLayerRef.current.clearClone();
       setIsTransitioning(false); // Move to end of entire sequence
     } else {
-      // Normal back transition for detail scene
-      const placeholder = document.querySelector('[data-hero-placeholder]');
-      const currentRect = placeholder?.getBoundingClientRect() || {
-        left: window.innerWidth / 2 - 210,
-        top: window.innerHeight * 0.6,
-        width: 420,
-        height: 504
-      };
+      const isLaptop = activeKey === 'work';
 
-      const obj = objectMap.find(o => o.contentKey === activeKey);
+      // Only perform the flying back transition for non-laptop items
+      if (!isLaptop) {
+        const placeholder = document.querySelector('[data-hero-placeholder]');
+        const currentRect = placeholder?.getBoundingClientRect() || {
+          left: window.innerWidth / 2 - 210,
+          top: window.innerHeight * 0.6,
+          width: 420,
+          height: 504
+        };
 
-      await transitionLayerRef.current.startBackTransition({
-        content: obj,
-        currentRect
-      });
+        const obj = objectMap.find(o => o.contentKey === activeKey);
+
+        await transitionLayerRef.current.startBackTransition({
+          content: obj,
+          currentRect
+        });
+      }
 
       setActiveScene('transitioning-back');
 
@@ -205,6 +234,8 @@ export default function App() {
     }
   }, [isTransitioning, activeKey, activeScene]);
 
+  const isLaptopTransition = isTransitioning && activeKey === 'work';
+
   return (
     <div className={`app-container ${isTransitioning ? 'is-transitioning' : ''}`} ref={scrollContainerRef}>
       {(activeScene === 'home' || activeScene === 'transitioning-to-detail' || activeScene === 'transitioning-back' || activeScene === 'transitioning-to-spotify') && (
@@ -212,10 +243,11 @@ export default function App() {
           activeScene={activeScene}
           onCardClick={handleCardClick}
           isTransitioning={isTransitioning || activeScene === 'transitioning-to-detail' || activeScene === 'transitioning-to-spotify'}
+          isLaptopTransition={isLaptopTransition}
         />
       )}
 
-      {(activeScene === 'detail' || activeScene === 'transitioning-to-detail' || activeScene === 'transitioning-back') && (
+      {(activeScene === 'detail' || activeScene === 'transitioning-to-detail' || (activeScene === 'transitioning-back' && activeKey !== 'music')) && (
         <SceneDetail
           activeKey={activeKey}
           onBack={handleBack}
@@ -224,11 +256,11 @@ export default function App() {
         />
       )}
 
-      {(activeScene === 'spotify' || activeScene === 'transitioning-to-spotify' || activeScene === 'transitioning-back') && (
+      {(activeScene === 'spotify' || activeScene === 'transitioning-to-spotify' || (activeScene === 'transitioning-back' && activeKey === 'music')) && (
         <SceneSpotify
           onBack={handleBack}
           isTransitioning={isTransitioning}
-          className={`${(activeScene === 'spotify' || activeScene === 'transitioning-back') ? 'active' : ''} ${activeScene === 'transitioning-to-spotify' ? 'transitioning-in' : ''}`}
+          className={`${(activeScene === 'spotify' || (activeScene === 'transitioning-back' && activeKey === 'music')) ? 'active' : ''} ${activeScene === 'transitioning-to-spotify' ? 'transitioning-in' : ''}`}
         />
       )}
 

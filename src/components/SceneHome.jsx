@@ -1,10 +1,10 @@
 import React from 'react';
 import { objectMap } from '../content/objectMap';
 
-export default function SceneHome({ onCardClick, isTransitioning, activeScene }) {
+export default function SceneHome({ onCardClick, isTransitioning, activeScene, isLaptopTransition }) {
     const isSpotifyTransition = activeScene === 'transitioning-to-spotify';
     return (
-        <div className={`scene-root scene-home ${isTransitioning ? 'transitioning' : ''} ${isSpotifyTransition ? 'is-headphones-transition' : ''}`}>
+        <div className={`scene-root scene-home ${isTransitioning ? 'transitioning' : ''} ${isSpotifyTransition ? 'is-headphones-transition' : ''} ${isLaptopTransition ? 'is-laptop-transition' : ''}`}>
             {objectMap.map((obj) => (
                 <div
                     key={obj.id}
@@ -12,6 +12,7 @@ export default function SceneHome({ onCardClick, isTransitioning, activeScene })
                     style={obj.style}
                     onClick={(e) => onCardClick(e, obj)}
                     data-card-id={obj.id}
+                    data-is-laptop={obj.id === 'obj_laptop'}
                 >
                     <div className="image-stack">
                         {obj.images?.closed && (

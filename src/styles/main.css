@@ -65,6 +65,10 @@ body.allow-scroll {
   opacity: 1;
 }
 
+.blueprint-square[data-is-laptop="true"] {
+  cursor: default;
+}
+
 /* Fade in images when home scene appears after reverse transition */
 .scene-home.fade-in .blueprint-square {
   opacity: 0;
@@ -187,6 +191,12 @@ body.allow-scroll {
   transform: none !important;
   opacity: 0.15;
   /* Keep ghost visible briefly */
+}
+
+.scene-home.transitioning.is-laptop-transition {
+  transform: none;
+  opacity: 1;
+  transition: opacity 0.3s ease 1.5s;
 }
 
 /* Fade in home scene when coming back from Spotify */
@@ -381,63 +391,12 @@ body.allow-scroll {
 
 /* Polaroids */
 /* Polaroids */
-.polaroid-card {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  padding: 0;
-  background: transparent;
-  box-shadow: none;
-  user-select: none;
-}
-
-.polaroid-card:hover {
-  transform: translate(-50%, -55%) scale(1.05);
-  box-shadow: none;
+/* The laptop uses blueprint-square but we can still target it for specific hover behavior if needed */
+.blueprint-square[data-is-laptop="true"]:hover {
   z-index: 10;
 }
 
-.polaroid-card .image-stack {
-  width: 100%;
-  height: auto;
-  aspect-ratio: 1/1;
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 12px;
-  background: transparent;
-  overflow: visible;
-}
 
-.polaroid-card .blueprint-image {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  transition: transform 0.4s ease;
-  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.15));
-}
-
-.polaroid-card:hover .image-open {
-  transform: scale(1.1);
-}
-
-.polaroid-card .blueprint-label {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--fg-muted);
-}
-
-.polaroid-card:hover .blueprint-label {
-  color: var(--accent);
-}
 
 /* Detail View Layout */
 .detail-container {
