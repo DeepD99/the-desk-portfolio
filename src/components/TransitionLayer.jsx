@@ -141,7 +141,7 @@ const TransitionLayer = forwardRef(({ onTransitionComplete }, ref) => {
                 // Stage 2: Portal Zoom
                 const zoomTimer = setTimeout(() => {
                     setImmersiveStage('zoomed');
-                }, 600); // Wait for centering to nearly complete
+                }, 250); // Wait for centering to nearly complete
                 animationTimers.current.push(zoomTimer);
             }
         }, 50);
@@ -182,12 +182,12 @@ const TransitionLayer = forwardRef(({ onTransitionComplete }, ref) => {
             currentStyle.transform = `translate3d(${centerX}px, ${centerY}px, 0) rotate(0deg)`;
         } else if (clone.isImmersive && clone.direction === 'forward') {
             if (immersiveStage === 'centered') {
-                currentStyle.transition = `transform 600ms ${EASING}`;
+                currentStyle.transition = `transform 450ms ${EASING}`;
                 currentStyle.transform = `translate3d(${centerX}px, ${centerY}px, 0) rotate(0deg)`;
             } else if (immersiveStage === 'zoomed') {
-                currentStyle.transition = `transform 1000ms cubic-bezier(.4, 0, .2, 1), opacity 800ms ease-in 200ms`;
-                currentStyle.transform = `translate3d(${centerX}px, ${centerY}px, 0) scale(12)`;
-                currentStyle.opacity = 0;
+                currentStyle.transition = `transform 1000ms cubic-bezier(.4, 0, .2, 1)`;
+                currentStyle.transform = `translate3d(${centerX}px, ${centerY}px, 0) scale(15)`;
+                currentStyle.opacity = 1;
             }
         } else {
             currentStyle.transition = `transform ${DURATION}ms ${EASING}, width ${DURATION}ms ${EASING}, height ${DURATION}ms ${EASING}, opacity ${DURATION}ms ${EASING}`;
@@ -204,7 +204,15 @@ const TransitionLayer = forwardRef(({ onTransitionComplete }, ref) => {
                     className="transition-clone"
                     style={currentStyle}
                 >
-                    <div className="clone-image-wrapper" style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div className="clone-image-wrapper" style={{
+                        width: '100%',
+                        height: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: 'transparent',
+                        borderRadius: '2px'
+                    }}>
                         <img
                             src={clone.image}
                             alt=""
@@ -212,8 +220,11 @@ const TransitionLayer = forwardRef(({ onTransitionComplete }, ref) => {
                                 maxWidth: '100%',
                                 maxHeight: '100%',
                                 objectFit: 'contain',
-                                filter: 'brightness(1)',
-                                transition: isHeadphonesForward ? `filter ${HEADPHONES_DURATION}ms ${EASING}` : 'none'
+                                filter: (isHeadphonesForward || (clone.isImmersive && (immersiveStage === 'centered' || immersiveStage === 'zoomed'))) ? 'brightness(0)' : 'brightness(1)',
+                                transition: (isHeadphonesForward || clone.isImmersive) ? `filter 400ms ease-in, opacity 400ms ease-in` : 'none',
+                                opacity: 1, // Keep the black image visible to act as the portal shape
+                                visibility: 'visible',
+                                transitionProperty: 'filter, opacity'
                             }}
                         />
                     </div>

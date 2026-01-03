@@ -141,12 +141,12 @@ export default function App() {
           isImmersive: true
         });
 
-        // Wait for animation duration (Stage 1: 600ms + Stage 2: 1000ms)
+        // Wait for screen to go black (centering 450ms + zoom 1000ms)
         setTimeout(() => {
-          setIsTransitioning(false);
           setActiveScene('detail');
+          setIsTransitioning(false);
           transitionLayerRef.current.clearClone();
-        }, 1800); // 1.8s to cover both stages and a small buffer
+        }, 1450);
       }, 50);
     } else {
       // Normal transition for other items
