@@ -11,6 +11,7 @@ const TransitionLayer = forwardRef(({ onTransitionComplete }, ref) => {
     const [overlayMode, setOverlayMode] = useState('forward');
     const [isAnimating, setIsAnimating] = useState(false);
     const [immersiveStage, setImmersiveStage] = useState('none'); // 'none' | 'centered' | 'zoomed'
+    const [wipeStage, setWipeStage] = useState('none'); // 'none' | 'exiting' | 'prepare' | 'swiping'
     const containerRef = useRef(null);
     const animationTimers = useRef([]);
 
@@ -26,6 +27,7 @@ const TransitionLayer = forwardRef(({ onTransitionComplete }, ref) => {
 
             setIsAnimating(false);
             setImmersiveStage('none');
+            setWipeStage('none');
             setShowBlackOverlay(false);
             setOverlayMode('forward');
 
@@ -143,6 +145,21 @@ const TransitionLayer = forwardRef(({ onTransitionComplete }, ref) => {
                     setImmersiveStage('zoomed');
                 }, 250); // Wait for centering to nearly complete
                 animationTimers.current.push(zoomTimer);
+            } else if (clone.id === 'obj_business_cards' && clone.direction === 'forward') {
+                // Stage 1: Exit Right
+                setWipeStage('exiting');
+
+                // Stage 2: Prepare for Wipe (Jump to right edge as full height)
+                const prepareTimer = setTimeout(() => {
+                    setWipeStage('prepare');
+                }, 500);
+
+                // Stage 3: Swipe Across
+                const swipeTimer = setTimeout(() => {
+                    setWipeStage('swiping');
+                }, 550);
+
+                animationTimers.current.push(prepareTimer, swipeTimer);
             }
         }, 50);
 
@@ -189,6 +206,31 @@ const TransitionLayer = forwardRef(({ onTransitionComplete }, ref) => {
                 currentStyle.transform = `translate3d(${centerX}px, ${centerY}px, 0) scale(15)`;
                 currentStyle.opacity = 1;
             }
+        } else if (clone.id === 'obj_business_cards' && clone.direction === 'forward') {
+            if (wipeStage === 'exiting') {
+                currentStyle.transition = `transform 500ms ${EASING}, opacity 500ms ease-in`;
+                currentStyle.transform = `translate3d(${window.innerWidth + 200}px, ${clone.first.top}px, 0) rotate(15deg)`;
+            } else if (wipeStage === 'prepare') {
+                currentStyle.transition = 'none';
+                currentStyle.width = '100vw';
+                currentStyle.height = '100vh';
+                currentStyle.left = 0;
+                currentStyle.top = 0;
+                currentStyle.background = 'var(--bg-bone)';
+                currentStyle.borderRadius = '0';
+                currentStyle.transform = `translate3d(100vw, 0, 0)`;
+                currentStyle.boxShadow = '25px 0 80px rgba(0,0,0,0.15)';
+            } else if (wipeStage === 'swiping') {
+                currentStyle.transition = `transform 1000ms cubic-bezier(0.4, 0, 0.2, 1)`;
+                currentStyle.width = '100vw';
+                currentStyle.height = '100vh';
+                currentStyle.left = 0;
+                currentStyle.top = 0;
+                currentStyle.background = 'var(--bg-bone)';
+                currentStyle.borderRadius = '0';
+                currentStyle.transform = `translate3d(-100vw, 0, 0)`;
+                currentStyle.boxShadow = '25px 0 80px rgba(0,0,0,0.15)';
+            }
         } else {
             currentStyle.transition = `transform ${DURATION}ms ${EASING}, width ${DURATION}ms ${EASING}, height ${DURATION}ms ${EASING}, opacity ${DURATION}ms ${EASING}`;
             currentStyle.width = `${clone.last.width}px`;
@@ -196,6 +238,8 @@ const TransitionLayer = forwardRef(({ onTransitionComplete }, ref) => {
             currentStyle.transform = `translate3d(${clone.last.left}px, ${clone.last.top}px, 0) rotate(0deg)`;
         }
     }
+
+    const isWipeActive = wipeStage === 'prepare' || wipeStage === 'swiping';
 
     return (
         <>
@@ -217,12 +261,14 @@ const TransitionLayer = forwardRef(({ onTransitionComplete }, ref) => {
                             src={clone.image}
                             alt=""
                             style={{
-                                maxWidth: '100%',
-                                maxHeight: '100%',
-                                objectFit: 'contain',
+                                width: isWipeActive ? '100%' : 'auto',
+                                height: isWipeActive ? '100%' : 'auto',
+                                maxWidth: isWipeActive ? '100%' : '90%',
+                                maxHeight: isWipeActive ? '100%' : '90%',
+                                objectFit: isWipeActive ? 'cover' : 'contain',
                                 filter: (clone.isImmersive && (immersiveStage === 'centered' || immersiveStage === 'zoomed')) ? 'brightness(0)' : 'brightness(1)',
                                 transition: (clone.isImmersive) ? `filter 400ms ease-in, opacity 400ms ease-in` : 'none',
-                                opacity: 1, // Keep the black image visible to act as the portal shape
+                                opacity: 1,
                                 visibility: 'visible',
                                 transitionProperty: 'filter, opacity'
                             }}

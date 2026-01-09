@@ -65,7 +65,8 @@ body.allow-scroll {
   opacity: 1;
 }
 
-.blueprint-square[data-is-laptop="true"] {
+.blueprint-square[data-is-laptop="true"],
+.blueprint-square[data-is-business-card="true"] {
   cursor: default;
 }
 
@@ -197,6 +198,11 @@ body.allow-scroll {
   transform: none !important;
   opacity: 1 !important;
   filter: none !important;
+}
+
+.scene-home.transitioning.is-wipe-transition {
+  transform: none !important;
+  opacity: 1 !important;
 }
 
 /* Fade in home scene when coming back from Spotify */
@@ -618,6 +624,25 @@ body.allow-scroll {
 .immersive-back:hover {
   background: rgba(255, 255, 255, 0.1) !important;
   border-color: #fff !important;
+}
+
+.scene-detail.is-wipe-reveal {
+  opacity: 1 !important;
+  transform: none !important;
+  filter: none !important;
+  clip-path: inset(0 0 0 200%);
+  animation: wipeReveal 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes wipeReveal {
+  0% {
+    clip-path: inset(0 0 0 200%);
+  }
+
+  100% {
+    /* Perfectly track the card's right edge (100% width + 100% start pos) */
+    clip-path: inset(0 0 0 -2%);
+  }
 }
 
 /* Loading Indicator */

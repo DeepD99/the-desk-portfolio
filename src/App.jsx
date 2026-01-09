@@ -50,6 +50,36 @@ export default function App() {
     const cardEl = e.currentTarget;
     const isHeadphones = obj.id === 'obj_headphones';
     const isLaptop = obj.id === 'obj_laptop';
+    const isBusinessCard = obj.id === 'obj_business_cards';
+
+    if (isBusinessCard) {
+      setIsTransitioning(true);
+      setActiveKey(obj.contentKey);
+
+      await transitionLayerRef.current.startTransition({
+        cardEl,
+        content: obj,
+        isWipe: true
+      });
+
+      // Fly-by Timing:
+      // 550ms: Swipe begins. Sync reveal precisely with TransitionLayer stage 3.
+      setTimeout(() => {
+        setActiveScene('transitioning-wipe');
+      }, 550);
+
+      // 1550ms: Swipe is complete. Finalize.
+      setTimeout(() => {
+        setActiveScene('detail');
+      }, 1550);
+
+      // Total sequence cleanup
+      setTimeout(() => {
+        setIsTransitioning(false);
+        transitionLayerRef.current.clearClone();
+      }, 1800);
+      return;
+    }
 
     setIsTransitioning(true);
     setActiveKey(obj.contentKey);
@@ -203,10 +233,10 @@ export default function App() {
       transitionLayerRef.current.clearClone();
       setIsTransitioning(false); // Move to end of entire sequence
     } else {
-      const isLaptop = activeKey === 'work';
+      const isImmersive = activeKey === 'work' || activeKey === 'about';
 
-      // Only perform the flying back transition for non-laptop items
-      if (!isLaptop) {
+      // Only perform the flying back transition for non-immersive items
+      if (!isImmersive) {
         const placeholder = document.querySelector('[data-hero-placeholder]');
         const currentRect = placeholder?.getBoundingClientRect() || {
           left: window.innerWidth / 2 - 210,
@@ -235,24 +265,28 @@ export default function App() {
   }, [isTransitioning, activeKey, activeScene]);
 
   const isLaptopTransition = isTransitioning && activeKey === 'work';
+  const isWipeTransition = isTransitioning && activeKey === 'about';
 
   return (
     <div className={`app-container ${isTransitioning ? 'is-transitioning' : ''}`} ref={scrollContainerRef}>
-      {(activeScene === 'home' || activeScene === 'transitioning-to-detail' || activeScene === 'transitioning-back' || activeScene === 'transitioning-to-spotify') && (
+      {(activeScene === 'home' || activeScene === 'transitioning-to-detail' || activeScene === 'transitioning-back' || activeScene === 'transitioning-to-spotify' || activeScene === 'transitioning-wipe') && (
         <SceneHome
           activeScene={activeScene}
           onCardClick={handleCardClick}
           isTransitioning={isTransitioning || activeScene === 'transitioning-to-detail' || activeScene === 'transitioning-to-spotify'}
           isLaptopTransition={isLaptopTransition}
+          isWipeTransition={isWipeTransition}
         />
       )}
 
-      {(activeScene === 'detail' || activeScene === 'transitioning-to-detail' || (activeScene === 'transitioning-back' && activeKey !== 'music')) && (
+      {(activeScene === 'detail' || activeScene === 'transitioning-to-detail' || activeScene === 'transitioning-wipe' || (activeScene === 'transitioning-back' && activeKey !== 'music')) && (
         <SceneDetail
           activeKey={activeKey}
+          activeScene={activeScene}
           onBack={handleBack}
           isTransitioning={isTransitioning}
-          className={`${(activeScene === 'detail' || activeScene === 'transitioning-to-detail') ? 'active' : ''} ${activeScene === 'transitioning-back' ? 'transitioning-out' : ''}`}
+          isWipe={activeKey === 'about'}
+          className={`${(activeScene === 'detail' || activeScene === 'transitioning-to-detail' || activeScene === 'transitioning-wipe') ? 'active' : ''} ${activeScene === 'transitioning-back' ? 'transitioning-out' : ''}`}
         />
       )}
 
