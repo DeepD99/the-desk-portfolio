@@ -14,6 +14,27 @@ export default function App() {
   const transitionLayerRef = useRef();
   const scrollContainerRef = useRef(null);
 
+  // Typewriter persistence
+  const introText = "Hello! My name is Deep Diganvker and welcome to my website. Each intricate part of my website is meant to display my many hobbies and passions. Click around to learn more about me :)";
+  const [displayedText, setDisplayedText] = useState("");
+  const hasStartedTyping = useRef(false);
+
+  useEffect(() => {
+    let timer;
+    const startDelay = setTimeout(() => {
+      let i = 0;
+      timer = setInterval(() => {
+        setDisplayedText(introText.slice(0, i + 1));
+        i++;
+        if (i >= introText.length) clearInterval(timer);
+      }, 30);
+    }, 500);
+
+    return () => {
+      clearTimeout(startDelay);
+      if (timer) clearInterval(timer);
+    };
+  }, []);
   useEffect(() => {
     if (isTransitioning) {
       document.body.style.overflow = 'hidden';
@@ -247,10 +268,12 @@ export default function App() {
 
         const obj = objectMap.find(o => o.contentKey === activeKey);
 
-        await transitionLayerRef.current.startBackTransition({
-          content: obj,
-          currentRect
-        });
+        if (obj) {
+          await transitionLayerRef.current.startBackTransition({
+            content: obj,
+            currentRect
+          });
+        }
       }
 
       setActiveScene('transitioning-back');
@@ -276,6 +299,7 @@ export default function App() {
           isTransitioning={isTransitioning || activeScene === 'transitioning-to-detail' || activeScene === 'transitioning-to-spotify'}
           isLaptopTransition={isLaptopTransition}
           isWipeTransition={isWipeTransition}
+          displayedText={displayedText}
         />
       )}
 

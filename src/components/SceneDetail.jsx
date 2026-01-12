@@ -30,14 +30,11 @@ export default function SceneDetail({ activeKey, onBack, isTransitioning, classN
             </button>
 
             <div className="immersive-content">
-                <h1 className="immersive-title">{isAbout ? "ABOUT" : "WORK"}</h1>
+                <h1 className="immersive-title">
+                    {activeKey === 'work' ? "WORK" : "ABOUT"}
+                </h1>
 
-                {/* ✅ Resume ripple preview lives INSIDE the existing SceneDetail */}
-                {!isAbout && (
-                    <div style={{ width: "min(820px, 92vw)", height: "min(1100px, 80vh)" }}>
-                        <ResumeRipplePreview src="/resume/resume-preview.webp" amp={0.011} />
-                    </div>
-                )}
+                {/* Resume preview can be added back here if needed */}
             </div>
         </div>
     );

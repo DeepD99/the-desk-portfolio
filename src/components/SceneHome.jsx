@@ -1,10 +1,21 @@
 import React from 'react';
 import { objectMap } from '../content/objectMap';
 
-export default function SceneHome({ onCardClick, isTransitioning, activeScene, isLaptopTransition, isWipeTransition }) {
+export default function SceneHome({ onCardClick, isTransitioning, activeScene, isLaptopTransition, isWipeTransition, displayedText }) {
     const isSpotifyTransition = activeScene === 'transitioning-to-spotify';
+
     return (
         <div className={`scene-root scene-home ${isTransitioning ? 'transitioning' : ''} ${isSpotifyTransition ? 'is-headphones-transition' : ''} ${isLaptopTransition ? 'is-laptop-transition' : ''} ${isWipeTransition ? 'is-wipe-transition' : ''}`}>
+
+            <div className="typewriter-container">
+                <div className="typewriter">
+                    <h1>
+                        {displayedText}
+                        <span className="cursor"></span>
+                    </h1>
+                </div>
+            </div>
+
             {objectMap.map((obj) => (
                 <div
                     key={obj.id}

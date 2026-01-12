@@ -601,8 +601,23 @@ body.allow-scroll {
   overflow: hidden;
 }
 
+/* Instant-on for immersive zoom transition - no fade flicker */
+.work-immersive.active {
+  transition: opacity 0.05s linear !important;
+  opacity: 1 !important;
+  transform: none !important;
+  filter: none !important;
+}
+
 .immersive-content {
   text-align: center;
+}
+
+.about-content {
+  text-align: left;
+  max-width: 800px;
+  width: 100%;
+  padding: 4rem;
 }
 
 .immersive-title {
@@ -725,4 +740,72 @@ body.allow-scroll {
   font-size: 10px;
   letter-spacing: 0.2em;
   color: var(--fg-muted);
+}
+
+/* Typewriter Effect from USER */
+.typewriter-container {
+  position: absolute;
+  top: 10%;
+  /* Positioned above the cards */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 800px;
+  z-index: 10;
+  pointer-events: none;
+  text-align: center;
+  transition: opacity 0.5s ease;
+}
+
+.scene-home.transitioning .typewriter-container {
+  opacity: 0;
+}
+
+.typewriter h1 {
+  overflow: hidden;
+  margin: 0 auto;
+  letter-spacing: .08em;
+  font-size: 1.4rem;
+  font-weight: 400;
+  color: var(--fg-blueprint);
+  line-height: 1.6;
+  font-family: 'Outfit', sans-serif;
+  display: inline-block;
+  text-align: left;
+}
+
+.typewriter h1 .cursor {
+  display: inline-block;
+  width: 0.15em;
+  height: 1em;
+  background-color: black;
+  margin-left: 4px;
+  vertical-align: middle;
+  animation: blink-caret .75s step-end infinite;
+}
+
+/* The typewriter cursor effect from USER */
+@keyframes blink-caret {
+
+  from,
+  to {
+    border-color: transparent;
+    background-color: transparent;
+  }
+
+  50% {
+    /* border-color: black; */
+    background-color: black;
+  }
+}
+
+@media (max-width: 768px) {
+  .typewriter-container {
+    top: 5%;
+  }
+
+  .typewriter h1 {
+    font-size: 1.1rem;
+    letter-spacing: 0.04em;
+  }
 }
