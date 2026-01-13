@@ -591,27 +591,158 @@ body.allow-scroll {
   }
 }
 
-/* Immersive Work Page */
-.work-immersive {
+/* Immersive Work & About Pages */
+.work-immersive,
+.about-immersive {
   background: #000 !important;
   display: flex !important;
+  flex-direction: column !important;
   justify-content: center !important;
   align-items: center !important;
   padding: 0 !important;
   overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
 }
 
-/* Instant-on for immersive zoom transition - no fade flicker */
-.work-immersive.active {
-  transition: opacity 0.05s linear !important;
+/* snappy reveal for wipe transition */
+.about-immersive.active {
   opacity: 1 !important;
   transform: none !important;
   filter: none !important;
+  transition: none !important;
+  /* No fade-in delay, the wipe should reveal it instantly */
 }
 
 .immersive-content {
   text-align: center;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
+
+/* Scroll Story Styles Reset */
+.scroll-story-container {
+  width: 100%;
+  min-height: 300vh;
+  height: auto;
+}
+
+.central-circle {
+  position: fixed;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  background-color: #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+  z-index: 100;
+  pointer-events: none;
+}
+
+.vertical-line {
+  position: fixed;
+  top: 40%;
+  left: 50%;
+  width: 1px;
+  height: 500vh;
+  background-color: #fff;
+  transform: translateX(-50%);
+  z-index: 90;
+  pointer-events: none;
+}
+
+.story-item {
+  width: 100%;
+  max-width: 1400px;
+  margin: 100vh 0;
+  /* Huge vertical gap between items */
+  display: flex;
+  position: relative;
+  opacity: 0;
+  filter: blur(8px);
+  transform: translateY(40px);
+  transition: all 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+  align-items: center;
+}
+
+.story-item.active {
+  opacity: 1;
+  filter: blur(0);
+  transform: translateY(0);
+}
+
+.story-item.left {
+  justify-content: flex-start;
+  padding-left: 10%;
+}
+
+.story-item.right {
+  justify-content: flex-end;
+  padding-right: 10%;
+  /* Move right card away from center */
+}
+
+.story-connector {
+  position: absolute;
+  top: 50%;
+  height: 1px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.6);
+  z-index: 80;
+  opacity: 0;
+  transition: opacity 0.4s ease 0.2s, width 0.6s ease 0.2s;
+}
+
+.story-item.left .story-connector {
+  left: 45%;
+  /* Right edge of card (10% + 35%) */
+  right: 50%;
+  /* Center line */
+  width: auto;
+}
+
+.story-item.right .story-connector {
+  left: 50%;
+  /* Center line */
+  right: 45%;
+  /* Left edge of card (100% - 10% - 35% = 55% from left, so 45% from right) */
+  width: auto;
+}
+
+.story-item.active .story-connector {
+  opacity: 1;
+}
+
+.story-content {
+  width: 35%;
+  padding: 2.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  text-align: left;
+  z-index: 100;
+}
+
+.story-content h3 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.8rem;
+  margin-bottom: 1.2rem;
+  color: #fff;
+}
+
+.story-content p {
+  font-size: 1.1rem;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.7);
+}
+
 
 .about-content {
   text-align: left;
@@ -648,18 +779,18 @@ body.allow-scroll {
   opacity: 1 !important;
   transform: none !important;
   filter: none !important;
-  clip-path: inset(0 0 0 200%);
-  animation: wipeReveal 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  clip-path: inset(0 0 0 100%);
+  animation: wipeReveal 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation-delay: 0.5s;
 }
 
 @keyframes wipeReveal {
   0% {
-    clip-path: inset(0 0 0 200%);
+    clip-path: inset(0 0 0 100%);
   }
 
   100% {
-    /* Perfectly track the card's right edge (100% width + 100% start pos) */
-    clip-path: inset(0 0 0 -2%);
+    clip-path: inset(0 0 0 0%);
   }
 }
 

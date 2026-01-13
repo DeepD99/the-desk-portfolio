@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import ResumeRipplePreview from "./ResumeRipplePreview";
+import ScrollStory from "./ScrollStory";
 
 export default function SceneDetail({ activeKey, onBack, isTransitioning, className, isWipe, activeScene }) {
     const backButtonRef = useRef(null);
@@ -17,8 +17,13 @@ export default function SceneDetail({ activeKey, onBack, isTransitioning, classN
 
     return (
         <div
-            className={`scene-root scene-detail work-immersive ${isTransitioning ? "transitioning" : ""
+            className={`scene-root scene-detail ${isAbout ? 'about-immersive' : 'work-immersive'} ${isTransitioning ? "transitioning" : ""
                 } ${isWipeEntering ? 'is-wipe-reveal' : ''} ${className || ""}`}
+            style={{
+                background: '#000',
+                overflowY: isAbout ? 'auto' : 'hidden',
+                height: '100dvh'
+            }}
         >
             <button
                 ref={backButtonRef}
@@ -29,13 +34,7 @@ export default function SceneDetail({ activeKey, onBack, isTransitioning, classN
                 ← BACK
             </button>
 
-            <div className="immersive-content">
-                <h1 className="immersive-title">
-                    {activeKey === 'work' ? "WORK" : "ABOUT"}
-                </h1>
-
-                {/* Resume preview can be added back here if needed */}
-            </div>
+            {isAbout && <ScrollStory />}
         </div>
     );
 }

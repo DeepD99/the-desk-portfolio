@@ -219,7 +219,7 @@ const TransitionLayer = forwardRef(({ onTransitionComplete }, ref) => {
                 currentStyle.background = 'var(--bg-bone)';
                 currentStyle.borderRadius = '0';
                 currentStyle.transform = `translate3d(100vw, 0, 0)`;
-                currentStyle.boxShadow = '25px 0 80px rgba(0,0,0,0.15)';
+                currentStyle.boxShadow = '-25px 0 80px rgba(0,0,0,0.15)';
             } else if (wipeStage === 'swiping') {
                 currentStyle.transition = `transform 1000ms cubic-bezier(0.4, 0, 0.2, 1)`;
                 currentStyle.width = '100vw';
@@ -229,7 +229,7 @@ const TransitionLayer = forwardRef(({ onTransitionComplete }, ref) => {
                 currentStyle.background = 'var(--bg-bone)';
                 currentStyle.borderRadius = '0';
                 currentStyle.transform = `translate3d(-100vw, 0, 0)`;
-                currentStyle.boxShadow = '25px 0 80px rgba(0,0,0,0.15)';
+                currentStyle.boxShadow = '-25px 0 80px rgba(0,0,0,0.15)';
             }
         } else {
             currentStyle.transition = `transform ${DURATION}ms ${EASING}, width ${DURATION}ms ${EASING}, height ${DURATION}ms ${EASING}, opacity ${DURATION}ms ${EASING}`;
