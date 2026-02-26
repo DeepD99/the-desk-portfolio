@@ -1,0 +1,1002 @@
+:root {
+  --bg-bone: #f5f2e9;
+  --fg-blueprint: #4a4a4a;
+  --fg-muted: #8c8c8c;
+  --accent: #2c2c2c;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: var(--bg-bone);
+  color: var(--fg-blueprint);
+  font-family: 'Outfit', sans-serif;
+  /* Performance optimizations */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Allow scrolling when transitioning to Spotify */
+body.allow-scroll {
+  overflow-y: auto;
+  height: 200vh;
+  /* Make body tall enough to scroll */
+}
+
+.canvas-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.desk-blueprint {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: var(--bg-bone);
+}
+
+.blueprint-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.blueprint-square {
+  /* flex item — no absolute positioning needed */
+  position: relative;
+  width: clamp(130px, 16vw, 240px);
+  height: clamp(130px, 16vw, 240px);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity  0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: visible;
+  padding: 10px;
+  opacity: 1;
+  flex-shrink: 0;
+}
+
+.blueprint-square[data-is-laptop="true"],
+.blueprint-square[data-is-business-card="true"] {
+  cursor: default;
+}
+
+/* Fade in images when home scene appears after reverse transition */
+.scene-home.fade-in .blueprint-square {
+  opacity: 0;
+  animation: fadeInCard 0.8s ease-in forwards;
+  animation-delay: calc(var(--card-index, 0) * 0.05s);
+}
+
+@keyframes fadeInCard {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.blueprint-square:hover {
+  transform: scale(1.04) translateY(-6px);
+}
+
+.image-stack {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.blueprint-image {
+  position: absolute;
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: contain;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.image-open {
+  z-index: 1;
+  transform: rotate(-8deg);
+  opacity: 0.8;
+}
+
+.image-closed {
+  z-index: 2;
+  transform: rotate(7deg);
+}
+
+.blueprint-square:hover .image-open {
+  z-index: 3;
+  transform: rotate(0deg) scale(1.1);
+  opacity: 1;
+}
+
+.blueprint-square:hover .image-closed {
+  z-index: 1;
+  transform: rotate(15deg) translate(20px, -10px);
+  opacity: 0.5;
+}
+
+.blueprint-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-align: center;
+  color: var(--fg-muted);
+  user-select: none;
+  text-transform: uppercase;
+}
+
+.blueprint-square:hover .blueprint-label {
+  color: var(--accent);
+  font-weight: bold;
+}
+
+/* Base Layout & Scenes */
+.app-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background: var(--bg-bone);
+  overflow: hidden;
+}
+
+.scene-root {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  will-change: transform, opacity, filter;
+  /* GPU acceleration */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  contain: layout style paint;
+}
+
+.scene-home {
+  z-index: 1;
+  opacity: 1;
+  transition: opacity 0.8s ease-in;
+  height: 100vh;
+  height: 100dvh;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  /* flex column: text row on top, cards row fills the rest — never overlaps */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.scene-home.transitioning {
+  transform: scale(1.05) translateY(-140px);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.scene-home.transitioning.is-headphones-transition {
+  transform: none !important;
+  opacity: 0.15;
+  /* Keep ghost visible briefly */
+}
+
+.scene-home.transitioning.is-laptop-transition {
+  transform: none !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+.scene-home.transitioning.is-wipe-transition {
+  transform: none !important;
+  opacity: 1 !important;
+}
+
+/* Fade in home scene when coming back from Spotify */
+.scene-home.fade-in {
+  opacity: 0;
+  animation: fadeInHome 0.8s ease-in forwards;
+}
+
+@keyframes fadeInHome {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.scene-detail {
+  z-index: 2;
+  overflow-y: auto;
+  padding: 4rem 2rem;
+  box-sizing: border-box;
+  background: var(--bg-bone);
+  opacity: 0;
+  transform: scale(0.95);
+  filter: blur(10px);
+  transition: opacity 0.75s cubic-bezier(.2, .8, .2, 1), transform 0.75s cubic-bezier(.2, .8, .2, 1), filter 0.75s cubic-bezier(.2, .8, .2, 1);
+}
+
+.scene-detail.active {
+  opacity: 1;
+  transform: scale(1);
+  filter: blur(0);
+}
+
+.scene-detail.transitioning-out {
+  opacity: 0 !important;
+  transform: scale(0.95) !important;
+  filter: blur(10px) !important;
+}
+
+.scene-spotify {
+  z-index: 10001;
+  /* Above black overlay */
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  background: #000;
+  opacity: 0;
+  transition: opacity 0.8s ease-in;
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+.scene-spotify.active {
+  opacity: 1 !important;
+}
+
+.scene-spotify.active,
+.scene-spotify:not(.transitioning-in) {
+  opacity: 1 !important;
+}
+
+.scene-spotify.transitioning-in {
+  opacity: 0;
+}
+
+.scene-spotify.transitioning .spotify-back-btn,
+.scene-spotify.transitioning-in .spotify-back-btn {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.spotify-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.spotify-back-btn {
+  position: absolute;
+  top: 2rem;
+  left: 2rem;
+  z-index: 10001;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  padding: 0.6rem 1.2rem;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.spotify-back-btn:hover {
+  border-color: rgba(255, 255, 255, 0.6);
+  background: rgba(0, 0, 0, 0.9);
+}
+
+.spotify-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #000;
+}
+
+/* Leaf falling animation for headphones */
+.transition-clone.headphones-falling {
+  will-change: transform, opacity;
+}
+
+/* Black overlay for smooth transition */
+.black-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 100%;
+  background: #000;
+  z-index: 10002;
+  /* Above Spotify scene (10001) */
+  opacity: 0;
+  pointer-events: none;
+  will-change: opacity;
+  /* GPU acceleration */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  contain: strict;
+}
+
+.black-overlay.forward {
+  animation: fadeToBlack 2.0s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.black-overlay.reverse {
+  animation: fadeToBlack 2.0s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* This class will be added after the baton pass to reveal the home scene */
+.black-overlay.fade-out {
+  animation: fadeToBone 2.0s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* This class will be added to reveal the Spotify scene (stays black but fades out) */
+.black-overlay.fade-out-black {
+  animation: fadeOutBlack 2.0s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes fadeToBlack {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOutBlack {
+  from {
+    opacity: 1;
+    background: #000;
+  }
+
+  to {
+    opacity: 0;
+    background: #000;
+    visibility: hidden;
+  }
+}
+
+@keyframes fadeToBone {
+  0% {
+    opacity: 1;
+    background: #000;
+  }
+
+  100% {
+    opacity: 0;
+    background: var(--bg-bone);
+    visibility: hidden;
+  }
+}
+
+/* Polaroids */
+/* Polaroids */
+/* The laptop uses blueprint-square but we can still target it for specific hover behavior if needed */
+.blueprint-square[data-is-laptop="true"]:hover {
+  z-index: 10;
+}
+
+
+
+/* Detail View Layout */
+.detail-container {
+  max-width: 900px;
+  margin: 0 auto;
+  opacity: 1;
+}
+
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.back-btn {
+  background: none;
+  border: 1px solid var(--fg-muted);
+  color: var(--fg-muted);
+  padding: 0.6rem 1.2rem;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.back-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.detail-title {
+  font-size: 3rem;
+  margin: 0;
+  letter-spacing: -0.02em;
+  font-weight: 400;
+}
+
+.hero-placeholder-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin: 2rem 0 4rem 0;
+}
+
+.hero-placeholder {
+  width: 420px;
+  max-width: 70vw;
+  aspect-ratio: 1/1.2;
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px dashed #ccc;
+}
+
+.detail-content {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.description-lead {
+  font-size: 1.4rem;
+  line-height: 1.5;
+  color: var(--fg-blueprint);
+  margin-bottom: 4rem;
+  font-weight: 300;
+}
+
+.section-block {
+  margin-top: 4rem;
+}
+
+.section-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--fg-muted);
+  margin-bottom: 2rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.5rem;
+}
+
+.content-list {
+  list-style: none;
+  padding: 0;
+}
+
+.content-item {
+  padding: 1.5rem 0;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5rem;
+}
+
+.item-index {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin-top: 0.3rem;
+}
+
+.filler-text {
+  margin-top: 6rem;
+  font-size: 0.9rem;
+  color: var(--fg-muted);
+  font-style: italic;
+  border-left: 2px solid #eee;
+  padding-left: 2rem;
+}
+
+/* Transition Utilities */
+.is-transitioning {
+  pointer-events: none;
+  cursor: wait;
+}
+
+
+.transition-clone {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  background: transparent;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  will-change: transform, opacity;
+  box-sizing: border-box;
+  /* GPU acceleration optimizations */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+  contain: layout style paint;
+}
+
+.transition-clone .clone-image-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  margin-bottom: 15px;
+  /* GPU acceleration */
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+.transition-clone img {
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: contain;
+  /* Image rendering optimizations */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  transform: translateZ(0);
+  will-change: transform, filter;
+  backface-visibility: hidden;
+}
+
+.transition-clone .blueprint-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+
+  .scene-root,
+  .polaroid-card,
+  .transition-clone {
+    transition: opacity 0.3s ease !important;
+    transform: none !important;
+  }
+}
+
+/* Immersive Work & About Pages */
+.work-immersive,
+.about-immersive {
+  background: #000 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 0 !important;
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+}
+
+/* snappy reveal for wipe transition */
+.about-immersive.active {
+  opacity: 1 !important;
+  transform: none !important;
+  filter: none !important;
+  transition: none !important;
+  /* No fade-in delay, the wipe should reveal it instantly */
+}
+
+.immersive-content {
+  text-align: center;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ─── Scroll Story ───────────────────────────────────────────────
+ *
+ *  Geometry (all % of page width, symmetric around 50% center):
+ *
+ *  LEFT card:   5% ←[  card 38%  ]→ 43% ···· 50% (center line)
+ *  RIGHT card:  50% (center line) ···· 57% ←[  card 38%  ]→ 95%
+ *
+ *  box-sizing: border-box on .story-item means:
+ *    padding eats into the declared width (100%), so the flex
+ *    content area IS exactly the remaining percentage.
+ *
+ *  Connector math:
+ *    left  connector: left=43%  right=50%  → width = 7%
+ *    right connector: left=50%  right=43%  → width = 7%
+ *
+ * ─────────────────────────────────────────────────────────────── */
+
+/* Allow about page to scroll from the top */
+.about-immersive {
+  justify-content: flex-start !important;
+  align-items: stretch !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+/* Scroll container — dot + line live here as absolute children */
+.scroll-story-container {
+  width: 100%;
+  min-height: 450vh;
+  position: relative;
+}
+
+/* Glowing dot at origin of the timeline */
+.timeline-dot {
+  position: absolute;
+  top: 5vh;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.15), 0 0 18px rgba(255,255,255,0.7);
+  z-index: 5;
+}
+
+/* Vertical center line — runs the full height of the container */
+.timeline-line {
+  position: absolute;
+  top: 5vh;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 3px;
+  height: calc(100% - 5vh);
+  background: rgba(255, 255, 255, 0.35);
+  z-index: 1;
+}
+
+/* ── UIC block — sits inside story-item right for zigzag alignment ── */
+.uic-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.uic-image {
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  display: block;
+  /* ensure the visible logo is flush with the left edge, no internal offset */
+  object-fit: contain;
+  object-position: left center;
+}
+
+/* Override connector length for the UIC block specifically —
+   extends it past the div edge to bridge any transparent padding in UIC.png */
+.uic-block .story-connector {
+  right: 30%;
+}
+
+.uic-caption {
+  margin: 1rem 0 0 0;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(0.75rem, 1.2vw, 0.95rem);
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ── Story item row ── */
+.story-item {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  position: relative;   /* connector positions relative to this */
+  /* entrance animation */
+  opacity: 0;
+  filter: blur(8px);
+  transform: translateY(40px);
+  transition:
+    opacity  0.6s cubic-bezier(0.2, 0.8, 0.2, 1),
+    filter   0.6s cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.story-item.active {
+  opacity: 1;
+  filter: blur(0);
+  transform: translateY(0);
+}
+
+/*
+ * LEFT: padding-left 5%, padding-right 57%
+ *   → flex content area = 100% - 5% - 57% = 38%
+ *   → card spans 5% → 43%  (right edge = 43%)
+ */
+.story-item.left {
+  padding-left: 5%;
+  padding-right: 57%;
+}
+
+/*
+ * RIGHT: padding-left 57%, padding-right 5%
+ *   → flex content area = 38%
+ *   → card spans 57% → 95%  (left edge = 57%)
+ */
+.story-item.right {
+  padding-left: 57%;
+  padding-right: 5%;
+}
+
+/* ── Dashed connector ── */
+.story-connector {
+  position: absolute;
+  top: 50%;
+  height: 1px;                               /* explicit height */
+  background: transparent;
+  border-top: 1px dashed rgba(255, 255, 255, 0.45);
+  z-index: 3;
+  opacity: 0;
+  transition: opacity 0.4s ease 0.3s;        /* fades in after card */
+}
+
+/* left connector: card right edge (43%) → center line (50%) */
+.story-item.left .story-connector {
+  left: 43%;
+  right: 50%;
+}
+
+/* right connector: center line (50%) → card left edge (57%) */
+.story-item.right .story-connector {
+  left: 50%;
+  right: 43%;
+}
+
+.story-item.active .story-connector {
+  opacity: 1;
+}
+
+/* ── Content box ── */
+.story-content {
+  width: 100%;          /* fills the flex content area (38% of page) */
+  box-sizing: border-box;
+  padding: 2rem 2.2rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  z-index: 4;
+}
+
+.story-content h3 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 400;
+  margin: 0 0 0.9rem 0;
+  color: #fff;
+}
+
+.story-content p {
+  font-size: 0.97rem;
+  line-height: 1.75;
+  color: rgba(255, 255, 255, 0.65);
+  margin: 0;
+}
+
+.immersive-back {
+  position: absolute;
+  top: 2rem;
+  left: 2rem;
+  color: #fff !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  z-index: 10;
+}
+
+.immersive-back:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: #fff !important;
+}
+
+.scene-detail.is-wipe-reveal {
+  opacity: 1 !important;
+  transform: none !important;
+  filter: none !important;
+  clip-path: inset(0 0 0 100%);
+  animation: wipeReveal 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation-delay: 0.5s;
+}
+
+@keyframes wipeReveal {
+  0% {
+    clip-path: inset(0 0 0 100%);
+  }
+
+  100% {
+    clip-path: inset(0 0 0 0%);
+  }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .cards-row {
+    flex-wrap: wrap;
+    gap: 4vw;
+    align-content: center;
+    padding: 0 5% clamp(1rem, 3vh, 2rem);
+  }
+
+  .blueprint-square {
+    width: 38vw !important;
+    height: 38vw !important;
+  }
+
+  .immersive-title {
+    font-size: 12vw;
+    letter-spacing: 0.3em;
+  }
+
+  .immersive-back {
+    top: 1rem;
+    left: 1rem;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.7rem;
+  }
+
+  .scene-detail {
+    padding: 3rem 1rem;
+  }
+
+  /* Adjust the eraser reveal for portrait */
+  .scene-detail.is-wipe-reveal {
+    clip-path: inset(0 0 0 100%);
+    animation: wipeRevealMobile 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+}
+
+@keyframes wipeRevealMobile {
+  0% {
+    clip-path: inset(0 0 0 100%);
+  }
+
+  100% {
+    clip-path: inset(0 0 0 -5%);
+  }
+}
+
+/* Loading Indicator */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-bone);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 200;
+}
+
+.loading-text {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--fg-muted);
+}
+
+/* Typewriter Effect from USER */
+.typewriter-container {
+  /* in normal flex flow — always sits above the cards row */
+  width: 90%;
+  max-width: 800px;
+  align-self: center;
+  padding-top: clamp(1.5rem, 6vh, 3.5rem);
+  padding-bottom: clamp(0.5rem, 2vh, 1.5rem);
+  z-index: 10;
+  pointer-events: none;
+  text-align: center;
+  transition: opacity 0.5s ease;
+  flex-shrink: 0;
+}
+
+/* Cards row — fills remaining height, never collides with text above */
+.cards-row {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  padding: 0 2% clamp(1rem, 4vh, 2.5rem);
+}
+
+.scene-home.transitioning .typewriter-container {
+  opacity: 0;
+}
+
+.typewriter h1 {
+  overflow: hidden;
+  margin: 0 auto;
+  letter-spacing: .08em;
+  font-size: 1.4rem;
+  font-weight: 400;
+  color: var(--fg-blueprint);
+  line-height: 1.6;
+  font-family: 'Outfit', sans-serif;
+  display: inline-block;
+  text-align: left;
+}
+
+.typewriter h1 .cursor {
+  display: inline-block;
+  width: 0.15em;
+  height: 1em;
+  background-color: black;
+  margin-left: 4px;
+  vertical-align: middle;
+  animation: blink-caret .75s step-end infinite;
+}
+
+/* The typewriter cursor effect from USER */
+@keyframes blink-caret {
+
+  from,
+  to {
+    border-color: transparent;
+    background-color: transparent;
+  }
+
+  50% {
+    /* border-color: black; */
+    background-color: black;
+  }
+}
+
+@media (max-width: 768px) {
+  .typewriter-container {
+    top: 5%;
+  }
+
+  .typewriter h1 {
+    font-size: 1.1rem;
+    letter-spacing: 0.04em;
+  }
+}
