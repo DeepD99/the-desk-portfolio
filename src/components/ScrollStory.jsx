@@ -14,67 +14,99 @@ const STORY_DATA = [
     {
         side: 'left',
         title: 'Creative Fusion',
-        text: 'Where logic meets aesthetics is where the magic happens. We don\'t just build tools; we craft experiences that resonate on a human level, using technology as our canvas.'
+        text: "Where logic meets aesthetics is where the magic happens. We don't just build tools; we craft experiences that resonate on a human level, using technology as our canvas."
     },
     {
         side: 'right',
         title: 'The Future',
-        text: 'Tomorrow is an open graph. We are continuously expanding the boundaries of what\'s possible, one node at a time. The path forward is illuminated by the light of innovation.'
+        text: "Tomorrow is an open graph. We are continuously expanding the boundaries of what's possible, one node at a time. The path forward is illuminated by the light of innovation."
     }
 ];
 
 export default function ScrollStory() {
-    const containerRef = useRef(null);
-    const [activeStates, setActiveStates] = useState([]);
+    const itemRefs = useRef([]);
+    const uicRef = useRef(null);
+    const [activeStates, setActiveStates] = useState(new Array(STORY_DATA.length).fill(false));
+    const [uicActive, setUicActive] = useState(false);
 
     useEffect(() => {
-        const parent = document.querySelector('.scene-detail.about-immersive');
+        const scrollRoot = document.querySelector('.scene-detail.about-immersive');
 
-        const handleScroll = () => {
-            if (!containerRef.current || !parent) return;
-            const items = containerRef.current.querySelectorAll('.story-item');
-            const viewportTriggerPoint = window.innerHeight * 0.75; // Trigger much earlier
+        // Observer for story boxes — resets when leaving viewport
+        const storyObserver = new IntersectionObserver(
+            (entries) => {
+                entries.forEach(entry => {
+                    const idx = parseInt(entry.target.dataset.idx);
+                    setActiveStates(prev => {
+                        const next = [...prev];
+                        next[idx] = entry.isIntersecting;
+                        return next;
+                    });
+                });
+            },
+            {
+                root: scrollRoot,
+                rootMargin: '0px 0px -25% 0px',
+                threshold: 0,
+            }
+        );
 
-            const newStates = Array.from(items).map(item => {
-                const rect = item.getBoundingClientRect();
-                return rect.top < viewportTriggerPoint;
-            });
+        // Observer for UIC block — same reset behaviour
+        const uicObserver = new IntersectionObserver(
+            (entries) => {
+                setUicActive(entries[0].isIntersecting);
+            },
+            {
+                root: scrollRoot,
+                rootMargin: '0px 0px -25% 0px',
+                threshold: 0,
+            }
+        );
 
-            setActiveStates(newStates);
+        itemRefs.current.forEach(el => el && storyObserver.observe(el));
+        if (uicRef.current) uicObserver.observe(uicRef.current);
+
+        return () => {
+            storyObserver.disconnect();
+            uicObserver.disconnect();
         };
-
-        if (parent) {
-            parent.addEventListener('scroll', handleScroll, { passive: true });
-        }
-        handleScroll();
-
-        return () => parent?.removeEventListener('scroll', handleScroll);
     }, []);
 
     return (
-        <div ref={containerRef} className="scroll-story-container">
-            <div className="central-circle"></div>
-            <div className="vertical-line"></div>
+        <div className="scroll-story-container">
+            <div className="timeline-dot" />
+            <div className="timeline-line" />
 
-            {STORY_DATA.map((item, idx) => {
-                const isActive = activeStates[idx];
+            {/* UIC block — right side, starts the zigzag before "The Spark" */}
+            <div
+                ref={uicRef}
+                className={`story-item right uic-block ${uicActive ? 'active' : ''}`}
+                style={{ marginTop: '75vh' }}
+            >
+                <div className="uic-content">
+                    <img src="/images/UIC.png" alt="University of Illinois Chicago" className="uic-image" />
+                    <p className="uic-caption">Graduated December 2022</p>
+                </div>
+                <div className="story-connector" />
+            </div>
 
-                return (
-                    <div
-                        key={idx}
-                        className={`story-item ${item.side} ${isActive ? 'active' : ''}`}
-                        style={{ marginTop: idx === 0 ? '80vh' : '60vh' }}
-                    >
-                        <div className="story-connector"></div>
-                        <div className="story-content">
-                            <h3>{item.title}</h3>
-                            <p>{item.text}</p>
-                        </div>
+            {STORY_DATA.map((item, idx) => (
+                <div
+                    key={idx}
+                    ref={el => itemRefs.current[idx] = el}
+                    data-idx={idx}
+                    className={`story-item ${item.side} ${activeStates[idx] ? 'active' : ''}`}
+                    style={{ marginTop: idx === 0 ? '45vh' : '55vh' }}
+                >
+                    <div className="story-content">
+                        <h3>{item.title}</h3>
+                        <p>{item.text}</p>
                     </div>
-                );
-            })}
-            <div style={{ height: '60vh' }}></div>
+                    <div className="story-connector" />
+                </div>
+            ))}
+
+            <div style={{ height: '50vh' }} />
         </div>
     );
 }
-
