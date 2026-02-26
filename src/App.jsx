@@ -1,0 +1,330 @@
+import { useState, useCallback, useRef, useEffect } from 'react';
+import SceneHome from './components/SceneHome';
+import SceneDetail from './components/SceneDetail';
+import SceneSpotify from './components/SceneSpotify';
+import TransitionLayer from './components/TransitionLayer';
+import LoadingIndicator from './components/LoadingIndicator';
+import { objectMap } from './content/objectMap';
+import './styles/main.css';
+
+export default function App() {
+  const [activeScene, setActiveScene] = useState('home'); // 'home' | 'detail' | 'spotify'
+  const [activeKey, setActiveKey] = useState(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const transitionLayerRef = useRef();
+  const scrollContainerRef = useRef(null);
+
+  // Typewriter persistence
+  const introText = "Hello! My name is Deep Diganvker and welcome to my website. Each intricate part of my website is meant to display my many hobbies and passions. Click around to learn more about me :)";
+  const [displayedText, setDisplayedText] = useState("");
+  const hasStartedTyping = useRef(false);
+
+  useEffect(() => {
+    let timer;
+    const startDelay = setTimeout(() => {
+      let i = 0;
+      timer = setInterval(() => {
+        setDisplayedText(introText.slice(0, i + 1));
+        i++;
+        if (i >= introText.length) clearInterval(timer);
+      }, 30);
+    }, 500);
+
+    return () => {
+      clearTimeout(startDelay);
+      if (timer) clearInterval(timer);
+    };
+  }, []);
+  useEffect(() => {
+    if (isTransitioning) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [isTransitioning]);
+
+  // Prevent manual scrolling during headphones transition
+  useEffect(() => {
+    const preventScroll = (e) => {
+      if (activeScene === 'spotify' || (isTransitioning && activeScene === 'transitioning-to-spotify')) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+    };
+
+    window.addEventListener('wheel', preventScroll, { passive: false });
+    window.addEventListener('touchmove', preventScroll, { passive: false });
+    window.addEventListener('scroll', preventScroll, { passive: false });
+
+    return () => {
+      window.removeEventListener('wheel', preventScroll);
+      window.removeEventListener('touchmove', preventScroll);
+      window.removeEventListener('scroll', preventScroll);
+    };
+  }, [activeScene, isTransitioning]);
+
+  const handleCardClick = useCallback(async (e, obj) => {
+    if (isTransitioning) return;
+
+    const cardEl = e.currentTarget;
+    const isHeadphones = obj.id === 'obj_headphones';
+    const isLaptop = obj.id === 'obj_laptop';
+    const isBusinessCard = obj.id === 'obj_business_cards';
+
+    if (isBusinessCard) {
+      setIsTransitioning(true);
+      setActiveKey(obj.contentKey);
+
+      await transitionLayerRef.current.startTransition({
+        cardEl,
+        content: obj,
+        isWipe: true
+      });
+
+      // Fly-by Timing:
+      // 550ms: Swipe begins. Sync reveal precisely with TransitionLayer stage 3.
+      setTimeout(() => {
+        setActiveScene('transitioning-wipe');
+      }, 550);
+
+      // 1550ms: Swipe is complete. Finalize.
+      setTimeout(() => {
+        setActiveScene('detail');
+      }, 1550);
+
+      // Total sequence cleanup
+      setTimeout(() => {
+        setIsTransitioning(false);
+        transitionLayerRef.current.clearClone();
+      }, 1800);
+      return;
+    }
+
+    setIsTransitioning(true);
+    setActiveKey(obj.contentKey);
+
+    if (isHeadphones) {
+      // Special transition for headphones
+      setActiveScene('transitioning-to-spotify');
+
+      // Start the leaf-falling transition
+      await transitionLayerRef.current.startTransition({
+        cardEl,
+        content: obj,
+        targetRect: { left: 0, top: 0, width: 0, height: 0 } // Not used for headphones
+      });
+
+      // Extend page height and enable scrolling
+      const originalBodyHeight = document.body.style.height;
+      document.body.style.height = '200vh'; // Extend body to allow scrolling
+      document.body.classList.add('allow-scroll');
+
+      // Wait for image to leave screen before starting scroll and fade
+      const scrollStartDelay = 1000; // Start scrolling after image has left viewport
+      const scrollDuration = 1500; // Duration of scroll animation
+      const startScroll = window.scrollY || 0;
+      const scrollDistance = window.innerHeight; // Scroll down 1 viewport height to reveal Spotify
+      const startTime = Date.now();
+
+      // Use requestAnimationFrame for smoother scrolling
+      let rafId = null;
+      const scrollStep = () => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / scrollDuration, 1);
+        const easeProgress = 1 - Math.pow(1 - progress, 3); // Ease out cubic
+        const currentScroll = startScroll + (scrollDistance * easeProgress);
+
+        window.scrollTo({ top: currentScroll, behavior: 'auto' });
+
+        if (progress < 1) {
+          rafId = requestAnimationFrame(scrollStep);
+        }
+      };
+
+      // Start scrolling after image leaves screen
+      setTimeout(() => {
+        scrollStep();
+      }, scrollStartDelay);
+
+      // Cleanup function to cancel animation if component unmounts
+      const cleanup = () => {
+        if (rafId) {
+          cancelAnimationFrame(rafId);
+        }
+      };
+
+      // Wait for animation to complete (Curtain is closed), then switch to Spotify backend
+      setTimeout(async () => {
+        // Step 1: Switch scene behind the curtain
+        setActiveScene('spotify');
+
+        // Reset body styles immediately
+        document.body.classList.remove('allow-scroll');
+        document.body.style.overflow = 'hidden';
+        document.body.style.height = originalBodyHeight || '';
+        window.scrollTo({ top: 0, behavior: 'instant' });
+
+        // Step 2: Open curtain (Fade from Black to Spotify)
+        await transitionLayerRef.current.startFadeOutBlack();
+
+        // Step 3: All done
+        setIsTransitioning(false);
+        transitionLayerRef.current.clearClone();
+      }, 2800); // 800ms start delay + 2000ms curtain fade duration
+
+      return cleanup;
+    } else if (isLaptop) {
+      // Stay on home scene while zooming
+      setTimeout(async () => {
+        const targetRect = {
+          left: 0,
+          top: 0,
+          width: window.innerWidth,
+          height: window.innerHeight
+        };
+
+        await transitionLayerRef.current.startTransition({
+          cardEl,
+          content: obj,
+          targetRect,
+          isImmersive: true
+        });
+
+        // Wait for screen to go black (centering 450ms + zoom 1000ms)
+        setTimeout(() => {
+          setActiveScene('detail');
+          setIsTransitioning(false);
+          transitionLayerRef.current.clearClone();
+        }, 1450);
+      }, 50);
+    } else {
+      // Normal transition for other items
+      setActiveScene('transitioning-to-detail');
+
+      // Wait for DOM to update so SceneDetail is rendered
+      setTimeout(async () => {
+        const placeholder = document.querySelector('[data-hero-placeholder]');
+        const targetRect = placeholder?.getBoundingClientRect() || {
+          left: window.innerWidth / 2 - 210,
+          top: window.innerHeight * 0.6,
+          width: 420,
+          height: 504
+        };
+
+        await transitionLayerRef.current.startTransition({
+          cardEl,
+          content: obj,
+          targetRect
+        });
+
+        // Wait for animation duration
+        setTimeout(() => {
+          setIsTransitioning(false);
+          setActiveScene('detail');
+          transitionLayerRef.current.clearClone();
+        }, 750);
+      }, 50);
+    }
+  }, [isTransitioning]);
+
+  const handleBack = useCallback(async () => {
+    if (isTransitioning) return;
+
+    setIsTransitioning(true);
+
+    if (activeScene === 'spotify') {
+      // START BATON PASS: Curtain closes (2.5s)
+      setIsTransitioning(true);
+      setActiveScene('transitioning-back');
+
+      // 1. Wait for overlay to fade in completely
+      await transitionLayerRef.current.startReverseBlackTransition();
+
+      // 2. BATON PASS: Screen is solid black. Swap the scenes now.
+      setActiveScene('home');
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      document.body.classList.remove('allow-scroll');
+
+      // 3. REVEAL: Curtain opens (2.5s)
+      await transitionLayerRef.current.startFadeOut();
+
+      // 4. CLEANUP: Clear everything
+      transitionLayerRef.current.clearClone();
+      setIsTransitioning(false); // Move to end of entire sequence
+    } else {
+      const isImmersive = activeKey === 'work' || activeKey === 'about';
+
+      // Only perform the flying back transition for non-immersive items
+      if (!isImmersive) {
+        const placeholder = document.querySelector('[data-hero-placeholder]');
+        const currentRect = placeholder?.getBoundingClientRect() || {
+          left: window.innerWidth / 2 - 210,
+          top: window.innerHeight * 0.6,
+          width: 420,
+          height: 504
+        };
+
+        const obj = objectMap.find(o => o.contentKey === activeKey);
+
+        if (obj) {
+          await transitionLayerRef.current.startBackTransition({
+            content: obj,
+            currentRect
+          });
+        }
+      }
+
+      setActiveScene('transitioning-back');
+
+      // Reverse transition
+      setTimeout(() => {
+        setActiveScene('home');
+        setIsTransitioning(false);
+        transitionLayerRef.current.clearClone();
+      }, 750);
+    }
+  }, [isTransitioning, activeKey, activeScene]);
+
+  const isLaptopTransition = isTransitioning && activeKey === 'work';
+  const isWipeTransition = isTransitioning && activeKey === 'about';
+
+  return (
+    <div className={`app-container ${isTransitioning ? 'is-transitioning' : ''}`} ref={scrollContainerRef}>
+      {(activeScene === 'home' || activeScene === 'transitioning-to-detail' || activeScene === 'transitioning-back' || activeScene === 'transitioning-to-spotify' || activeScene === 'transitioning-wipe') && (
+        <SceneHome
+          activeScene={activeScene}
+          onCardClick={handleCardClick}
+          isTransitioning={isTransitioning || activeScene === 'transitioning-to-detail' || activeScene === 'transitioning-to-spotify'}
+          isLaptopTransition={isLaptopTransition}
+          isWipeTransition={isWipeTransition}
+          displayedText={displayedText}
+        />
+      )}
+
+      {(activeScene === 'detail' || activeScene === 'transitioning-to-detail' || activeScene === 'transitioning-wipe' || (activeScene === 'transitioning-back' && activeKey !== 'music')) && (
+        <SceneDetail
+          activeKey={activeKey}
+          activeScene={activeScene}
+          onBack={handleBack}
+          isTransitioning={isTransitioning}
+          isWipe={activeKey === 'about'}
+          className={`${(activeScene === 'detail' || activeScene === 'transitioning-to-detail' || activeScene === 'transitioning-wipe') ? 'active' : ''} ${activeScene === 'transitioning-back' ? 'transitioning-out' : ''}`}
+        />
+      )}
+
+      {(activeScene === 'spotify' || activeScene === 'transitioning-to-spotify' || (activeScene === 'transitioning-back' && activeKey === 'music')) && (
+        <SceneSpotify
+          onBack={handleBack}
+          isTransitioning={isTransitioning}
+          className={`${(activeScene === 'spotify' || (activeScene === 'transitioning-back' && activeKey === 'music')) ? 'active' : ''} ${activeScene === 'transitioning-to-spotify' ? 'transitioning-in' : ''}`}
+        />
+      )}
+
+      <TransitionLayer ref={transitionLayerRef} />
+
+      <LoadingIndicator />
+    </div>
+  );
+}
