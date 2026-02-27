@@ -796,6 +796,133 @@ body.allow-scroll {
   opacity: 1;
 }
 
+/* ── Paired row: grad pic (left 43%) + UIC (right 57%) side by side ── */
+.paired-story-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  position: relative;
+}
+
+/* ── Left: grad pic ── */
+.paired-left {
+  width: 43%;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  padding-left: 5%;
+  padding-right: 2%;
+  position: relative;
+}
+
+/* ── Right: UIC ── */
+.paired-right {
+  width: 57%;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  padding-left: 7%;
+  padding-right: 5%;
+  position: relative;
+  /* entrance animation */
+  opacity: 0;
+  filter: blur(8px);
+  transform: translateY(40px);
+  transition:
+    opacity   0.6s cubic-bezier(0.2, 0.8, 0.2, 1),
+    filter    0.6s cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.paired-right.active {
+  opacity: 1;
+  filter: blur(0);
+  transform: translateY(0);
+}
+
+/* ── Paired connectors — absolute siblings in the full-width row ── */
+.paired-connector {
+  position: absolute;
+  top: 50%;
+  height: 1px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.45);
+  z-index: 3;
+  opacity: 0;
+  transition: opacity 0.4s ease 0.3s;
+  pointer-events: none;
+}
+
+.paired-connector.visible {
+  opacity: 1;
+}
+
+/* left connector: card right edge (43%) → center line (50%) */
+.paired-conn-left {
+  left: 43%;
+  right: 50%;
+}
+
+/* right connector: center line (50%) → card left edge (~57% but extended for UIC logo padding) */
+.paired-conn-right {
+  left: 50%;
+  right: 30%;
+}
+
+/* ── Grad pic: blurry ghost behind the sharp foreground image ── */
+.grad-pic-glow-wrapper {
+  position: relative;
+  display: block;
+  width: 65%;
+  border-radius: 12px;
+  overflow: visible;
+}
+
+/* Ghost image — same photo, larger, blurred, low opacity, sits behind */
+.grad-pic-glow-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 150%;
+  height: 150%;
+  transform: translate(-50%, -50%);
+  background: url('/images/grad pic.jpg') center 25% / cover no-repeat;
+  border-radius: 16px;
+  filter: blur(22px);
+  opacity: 0;
+  z-index: 0;
+  transition: opacity 0.9s ease 0.4s;
+  pointer-events: none;
+}
+
+.paired-left.active .grad-pic-glow-wrapper::before {
+  opacity: 0.35;
+}
+
+/* Sharp foreground image */
+.grad-pic-image {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  aspect-ratio: 3 / 3.86;
+  object-fit: cover;
+  object-position: center 25%;
+  border-radius: 12px;
+  display: block;
+  /* entrance animation — same as story boxes */
+  opacity: 0;
+  filter: blur(8px);
+  transform: translateY(40px);
+  transition:
+    opacity   0.6s cubic-bezier(0.2, 0.8, 0.2, 1),
+    filter    0.6s cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.paired-left.active .grad-pic-image {
+  opacity: 1;
+  filter: blur(0);
+  transform: translateY(0);
+}
+
 /* ── Content box ── */
 .story-content {
   width: 100%;          /* fills the flex content area (38% of page) */

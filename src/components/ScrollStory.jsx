@@ -26,8 +26,10 @@ const STORY_DATA = [
 export default function ScrollStory() {
     const itemRefs = useRef([]);
     const uicRef = useRef(null);
+    const gradRef = useRef(null);
     const [activeStates, setActiveStates] = useState(new Array(STORY_DATA.length).fill(false));
     const [uicActive, setUicActive] = useState(false);
+    const [gradActive, setGradActive] = useState(false);
 
     useEffect(() => {
         const scrollRoot = document.querySelector('.scene-detail.about-immersive');
@@ -63,12 +65,32 @@ export default function ScrollStory() {
             }
         );
 
+        // Observer for grad pic — same reset behaviour
+        const gradObserver = new IntersectionObserver(
+            (entries) => {
+                setGradActive(entries[0].isIntersecting);
+            },
+            {
+                root: scrollRoot,
+                rootMargin: '0px 0px -25% 0px',
+                threshold: 0,
+            }
+        );
+
         itemRefs.current.forEach(el => el && storyObserver.observe(el));
         if (uicRef.current) uicObserver.observe(uicRef.current);
 
+        // Delay the grad pic observer so the browser paints opacity:0
+        // before the callback fires (element is in the initial viewport)
+        const timer = setTimeout(() => {
+            if (gradRef.current) gradObserver.observe(gradRef.current);
+        }, 200);
+
         return () => {
+            clearTimeout(timer);
             storyObserver.disconnect();
             uicObserver.disconnect();
+            gradObserver.disconnect();
         };
     }, []);
 
@@ -77,17 +99,28 @@ export default function ScrollStory() {
             <div className="timeline-dot" />
             <div className="timeline-line" />
 
-            {/* UIC block — right side, starts the zigzag before "The Spark" */}
-            <div
-                ref={uicRef}
-                className={`story-item right uic-block ${uicActive ? 'active' : ''}`}
-                style={{ marginTop: '75vh' }}
-            >
-                <div className="uic-content">
-                    <img src="/images/UIC.png" alt="University of Illinois Chicago" className="uic-image" />
-                    <p className="uic-caption">Graduated December 2022</p>
+            {/* ── Paired row: grad pic (left) + UIC (right), same vertical level ── */}
+            <div className="paired-story-row" style={{ marginTop: '75vh' }}>
+
+                {/* Grad pic — left 43% */}
+                <div ref={gradRef} className={`paired-left ${gradActive ? 'active' : ''}`}>
+                    <div className="grad-pic-glow-wrapper">
+                        <img src="/images/grad pic.jpg" alt="Graduation" className="grad-pic-image" />
+                    </div>
                 </div>
-                <div className="story-connector" />
+
+                {/* UIC — right 57% */}
+                <div ref={uicRef} className={`paired-right ${uicActive ? 'active' : ''}`}>
+                    <div className="uic-content">
+                        <img src="/images/UIC.png" alt="University of Illinois Chicago" className="uic-image" />
+                        <p className="uic-caption">Graduated December 2022</p>
+                    </div>
+                </div>
+
+                {/* Connectors — absolutely positioned relative to the full-width row */}
+                <div className={`paired-connector paired-conn-left ${gradActive ? 'visible' : ''}`} />
+                <div className={`paired-connector paired-conn-right ${uicActive ? 'visible' : ''}`} />
+
             </div>
 
             {STORY_DATA.map((item, idx) => (
